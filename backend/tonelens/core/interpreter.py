@@ -1,4 +1,4 @@
-"""Prosody-aware (and text-only baseline) interpretation via Groq + Llama."""
+"""Prosody-aware (and text-only baseline) interpretation via Groq."""
 
 from __future__ import annotations
 
@@ -7,7 +7,12 @@ import os
 
 from .prosody import summary_for_llm
 
-MODEL = "llama-3.3-70b-versatile"
+# Groq retires models over time; override with TONELENS_GROQ_MODEL.
+DEFAULT_MODEL = "openai/gpt-oss-120b"
+
+
+def model_name() -> str:
+    return os.environ.get("TONELENS_GROQ_MODEL") or DEFAULT_MODEL
 MODES = ("prosody", "text_only")
 
 
@@ -92,16 +97,22 @@ def interpret_speech(
     client = _client()
     prompt = build_prompt(transcript, language, features, context, mode)
     raw, last_err = "", None
+    model = model_name()
+    extra = {}
+    if "gpt-oss" in model:
+        # reasoning model: keep thinking short and leave room for the JSON answer
+        extra = {"reasoning_effort": "low"}
     for _ in range(2):
         resp = client.chat.completions.create(
-            model=MODEL,
+            model=model,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt},
             ],
             temperature=0.2,
-            max_tokens=1200,
+            max_tokens=4000,
             response_format={"type": "json_object"},
+            **extra,
         )
         raw = resp.choices[0].message.content or ""
         try:

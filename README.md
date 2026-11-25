@@ -15,7 +15,7 @@ It is **not an emotion detector.** Measurements are observations; interpretation
 |---|---|
 | **Studio** | Record in the browser with a live pitch trail (in-browser YIN, zero latency), rising/falling cue and note readout. Or drag-and-drop audio. Mic auto-gain and noise suppression are disabled so loudness dynamics survive. |
 | **Analysis** | Interactive timeline (pitch, energy, pauses, word lane, synced playhead; click to seek, click a word to hear it). Emphasis-shaded transcript, 8 metrics, word table, export (Markdown / JSON / CSV). |
-| **Interpretation** | Groq + Llama 3.3 70B, strict JSON schema, prosody–text disagreement banner, and an **A/B toggle against a text-only baseline** (System A vs B). |
+| **Interpretation** | Groq (`openai/gpt-oss-120b` by default, set `TONELENS_GROQ_MODEL` to change), strict JSON schema, prosody–text disagreement banner, and an **A/B toggle against a text-only baseline** (System A vs B). |
 | **Voice profiles** | Calibrate on neutral sentences. Later analyses are reported relative to *your* baseline ("+3 st above your usual pitch, 1.3× your usual pace"). |
 | **Delivery fingerprint** | 8-dimension vector per recording (radar), similarity search ("similar deliveries"). |
 | **Compare** | Overlay 2–6 speaker- and time-normalised contours and fingerprints, with pairwise similarity. |
@@ -67,6 +67,7 @@ docker compose up -d --scale worker=6      # add capacity
 | Variable | Default | |
 |---|---|---|
 | `GROQ_API_KEY` | (none) | enables interpretation |
+| `TONELENS_GROQ_MODEL` | `openai/gpt-oss-120b` | any Groq chat model with JSON mode |
 | `TONELENS_QUEUE` | `inline` | `inline` or `redis` |
 | `TONELENS_REDIS_URL` | `redis://localhost:6379/0` | |
 | `TONELENS_DATABASE_URL` | SQLite in data dir | e.g. `postgresql+psycopg://…` |
