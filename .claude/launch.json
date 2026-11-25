@@ -1,0 +1,45 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "tonelens-api",
+      "runtimeExecutable": ".venv/bin/uvicorn",
+      "runtimeArgs": [
+        "--app-dir",
+        "backend",
+        "tonelens.api.main:app",
+        "--port",
+        "8000",
+        "--reload",
+        "--reload-dir",
+        "backend/tonelens"
+      ],
+      "port": 8000
+    },
+    {
+      "name": "tonelens-web",
+      "runtimeExecutable": "/Users/dhruvdawar11/.nvm/versions/node/v23.7.0/bin/node",
+      "runtimeArgs": [
+        "frontend/node_modules/vite/bin/vite.js",
+        "frontend",
+        "--port",
+        "5173",
+        "--strictPort"
+      ],
+      "port": 5173
+    },
+    {
+      "name": "tonelens-streamlit",
+      "runtimeExecutable": ".venv/bin/streamlit",
+      "runtimeArgs": [
+        "run",
+        "backend/streamlit_app.py",
+        "--server.port",
+        "8501",
+        "--server.headless",
+        "true"
+      ],
+      "port": 8501
+    }
+  ]
+}

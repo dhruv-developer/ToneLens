@@ -1,0 +1,13 @@
+.venv/
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+scratch/
+*.aiff
+*.wav
+static/
+node_modules/
+frontend/dist/
+backend/data/
+*.tsbuildinfo

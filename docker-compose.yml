@@ -1,0 +1,57 @@
+# Horizontally scalable deploy:
+#   docker compose up --build                       # api + 2 workers + redis + postgres
+#   docker compose up --scale worker=6 -d           # add capacity
+# Open http://localhost:8000 (the API also serves the built frontend).
+
+x-tonelens-env: &tonelens-env
+  TONELENS_QUEUE: redis
+  TONELENS_REDIS_URL: redis://redis:6379/0
+  TONELENS_DATABASE_URL: postgresql+psycopg://tonelens:tonelens@postgres:5432/tonelens
+  TONELENS_WHISPER_MODEL: ${TONELENS_WHISPER_MODEL:-small}
+  TONELENS_WORKERS: ${TONELENS_WORKERS:-2}
+  TONELENS_CORS_ORIGINS: '["http://localhost:8000"]'
+
+services:
+  api:
+    build: .
+    image: tonelens:latest
+    environment: *tonelens-env
+    env_file:
+      - path: .env
+        required: false
+    ports: ["8000:8000"]
+    volumes: [data:/data, models:/models]
+    command: ["uvicorn", "tonelens.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+    depends_on:
+      redis: { condition: service_healthy }
+      postgres: { condition: service_healthy }
+    restart: unless-stopped
+
+  worker:
+    image: tonelens:latest
+    environment: *tonelens-env
+    env_file:
+      - path: .env
+        required: false
+    volumes: [data:/data, models:/models]
+    command: ["python", "-m", "tonelens.worker"]
+    depends_on:
+      api: { condition: service_started }
+    deploy:
+      replicas: 2
+    stop_grace_period: 2m
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redis:/data]
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 5s, retries: 10 }
+
+  postgres:
+    image: postgres:16-alpine
+    environment: { POSTGRES_USER: tonelens, POSTGRES_PASSWORD: tonelens, POSTGRES_DB: tonelens }
+    volumes: [pg:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U tonelens"], interval: 5s, retries: 10 }
+
+volumes: { data: {}, models: {}, redis: {}, pg: {} }
